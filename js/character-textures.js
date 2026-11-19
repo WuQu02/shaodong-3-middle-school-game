@@ -25,6 +25,8 @@
   };
   const cache = {};
   const failed = {};
+  const portraits = {};
+  const portraitFailed = {};
 
   function load(key, src) {
     const img = new Image();
@@ -43,10 +45,40 @@
   }
 
   function loadAll() {
-    for (const key of Object.keys(FILES)) if (!cache[key] && !failed[key]) load(key, FILES[key]);
+    for (const key of Object.keys(FILES)) {
+      if (!cache[key] && !failed[key]) load(key, FILES[key]);
+      const src = key.startsWith('npc-') ? 'images/portrait-' + key + '.png' : null;
+      if (src && !portraits[key] && !portraitFailed[key]) {
+        const img = new Image();
+        img.onload = () => { portraits[key] = img; };
+        img.onerror = () => { portraitFailed[key] = true; };
+        img.src = src;
+      }
+    }
   }
 
   function get(key) { return cache[key] || null; }
+  function getPortrait(key) { return portraits[key] || null; }
+
+  function drawPortrait(ctx, key, size) {
+    const img = portraits[key];
+    if (!img) return false;
+    size = size || 220;
+    ctx.clearRect(0, 0, size, size);
+    const s = Math.max(size / img.width, size / img.height);
+    const w = img.width * s, h = img.height * s;
+    ctx.save();
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(0, 0, size, size, 14);
+    else ctx.rect(0, 0, size, size);
+    ctx.clip();
+    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(242,212,154,.45)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(.5, .5, size - 1, size - 1);
+    return true;
+  }
 
   function draw(ctx, key, x, gy, scale, facing, walking, phase) {
     const t = cache[key];
@@ -71,7 +103,7 @@
     return true;
   }
 
-  window.CharacterTextures = { loadAll, get, draw, files: FILES };
+  window.CharacterTextures = { loadAll, get, getPortrait, draw, drawPortrait, files: FILES };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadAll);
   else loadAll();
 })();

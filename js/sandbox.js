@@ -917,6 +917,7 @@
   /* ---------- 对话 ---------- */
   function drawPortrait(npc) {
     const c = $('portrait'), g = c.getContext('2d');
+    if (window.CharacterTextures && window.CharacterTextures.drawPortrait(g, 'npc-' + npc.id, 220)) return;
     g.clearRect(0, 0, 220, 220);
     const grad = g.createRadialGradient(110, 78, 8, 110, 100, 120);
     grad.addColorStop(0, 'rgba(143,232,255,.14)');

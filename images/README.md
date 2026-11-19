@@ -43,3 +43,28 @@ npc-squirrel.png    肖志雄
 4. 刷新游戏，角色会自动使用贴图；没有贴图的角色继续使用原来的绘制，不会报错。
 
 真人照片仅在本机浏览器中处理，不会上传。
+
+
+## 头像（本地使用）
+
+如果只有人物头像/半身照，不需要做成整身精灵表。将 220 × 220 的图片命名为：
+
+```text
+portrait-npc-security.png
+portrait-npc-luoruoyu.png
+portrait-npc-zhoudi.png
+portrait-npc-liliyan.png
+portrait-npc-shenzhiwei.png
+portrait-npc-wenqixin.png
+portrait-npc-director.png
+portrait-npc-dormkeeper.png
+portrait-npc-qinxiangnuan.png
+portrait-npc-canteen.png
+portrait-npc-songtaotao.png
+portrait-npc-zhengchongfeng.png
+portrait-npc-sumelody.png
+portrait-npc-librarian.png
+portrait-npc-konghuaigu.png
+```
+
+游戏会在 NPC 对话立绘中优先使用这些头像；没有头像时继续使用原来的绘制。
