@@ -12,7 +12,7 @@
 
 ## 立即游玩
 
-- **在线版：** <https://wuqu02.github.io/sanzhong-fengyun/>
+- **在线版：** <https://wuqu02.github.io/shaodong-3-middle-school-game/>
 - **本地版：** 下载仓库后直接双击 `index.html`，或运行 `python -m http.server 8080` 后访问 `http://localhost:8080`。
 - 建议使用最新版 **Chrome / Edge**，横屏、1920×1080 或更高分辨率，佩戴耳机。
 - 游戏使用 WebGL 3D 场景；不支持 WebGL 的设备会自动回退到二维水墨模式。
