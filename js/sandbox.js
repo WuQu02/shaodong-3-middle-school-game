@@ -646,6 +646,7 @@
     const t = performance.now() / 1000;
     const walking = !!opts.walking;
     const phase = opts.phase || 0;
+    if (opts.texKey && window.CharacterTextures && window.CharacterTextures.draw(ctx, opts.texKey, x, gy, scale, opts.facing || 1, walking, phase)) return;
     const bob = walking ? Math.abs(Math.sin(phase)) * 2.2 : Math.sin(t * 1.7 + (opts.seed || 0)) * 1.2;
     const swing = walking ? Math.sin(phase) * 12 : 0;
     const coat = p.coat || '#2f5f8f';
@@ -770,7 +771,7 @@
         const facing = state.player.x >= n.x ? 1 : -1;
         drawPerson(x, gy - 2, .94, n.palette, {
           accessory: n.accessory, scarf: n.accessory === 'scarf',
-          walking: false, seed: n.x * .01, facing
+          walking: false, seed: n.x * .01, facing, texKey: 'npc-' + n.id
         });
       }
       // 名字
@@ -805,7 +806,7 @@
     drawPerson(sx(p.x), gy - p.y, 1, {
       coat: '#2b4f78', trim: '#e9eef2', hair: '#1b222a', skin: '#e4c0a0', accent: '#c94b45'
     }, {
-      accessory: 'backpack', walking, phase: p.walk, facing: p.facing, seed: 0
+      accessory: 'backpack', walking, phase: p.walk, facing: p.facing, seed: 0, texKey: 'player'
     });
     // 跳跃时的高度阴影
     if (!p.onGround) {

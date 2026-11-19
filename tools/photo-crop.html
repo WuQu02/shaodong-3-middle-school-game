@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>本地人物贴图裁剪 · 三中</title>
+<style>
+  :root { --cyan:#8fe8ff; --line:rgba(210,238,248,.16); --muted:rgba(230,240,244,.55); }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#060d13; color:#eaf3f5; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+  .wrap { max-width:1180px; margin:0 auto; padding:24px; }
+  h1 { margin:0 0 4px; font-family:"Songti SC","STSong",serif; font-weight:500; letter-spacing:.12em; }
+  .sub { margin:0 0 18px; font-size:12px; line-height:1.7; color:var(--muted); }
+  .bar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:rgba(10,22,30,.65); }
+  .bar label { font-size:11px; color:var(--muted); display:flex; gap:6px; align-items:center; }
+  input[type=file], select { background:rgba(0,0,0,.3); border:1px solid var(--line); color:#eaf3f5; border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; }
+  input[type=range] { accent-color:#8fe8ff; }
+  button { border:1px solid rgba(143,232,255,.4); background:rgba(143,232,255,.08); color:var(--cyan); border-radius:8px; padding:8px 16px; font:inherit; font-size:12px; cursor:pointer; }
+  button:hover { background:rgba(143,232,255,.16); }
+  .stage { position:relative; margin-top:14px; min-height:320px; border:1px solid var(--line); border-radius:12px; background:rgba(3,10,15,.6); overflow:hidden; display:grid; place-items:center; }
+  canvas#view { display:block; max-width:100%; cursor:crosshair; }
+  .hint { position:absolute; inset:0; display:grid; place-items:center; color:rgba(230,240,244,.32); font-size:13px; letter-spacing:.1em; pointer-events:none; }
+  .meta { margin-top:10px; display:flex; gap:16px; flex-wrap:wrap; font-size:11px; color:var(--muted); }
+  .privacy { margin-top:18px; padding:10px 13px; border-left:2px solid rgba(242,212,154,.5); background:rgba(242,212,154,.05); font-size:11px; line-height:1.7; color:rgba(242,212,154,.7); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>本地人物贴图裁剪</h1>
+  <p class="sub">在教室照片里框选一个人物，导出为透明 PNG，放进 <code>game/images/</code>。照片只在当前浏览器内读取，不会上传到任何服务器。</p>
+  <div class="bar">
+    <label>照片 <input id="file" type="file" accept="image/*"></label>
+    <label>目标
+      <select id="target">
+        <option value="player">player.png · 主角</option>
+        <option value="npc-security">npc-security.png · 保安老周</option>
+        <option value="npc-luoruoyu">npc-luoruoyu.png · 罗若愚</option>
+        <option value="npc-zhoudi">npc-zhoudi.png · 周帝</option>
+        <option value="npc-liliyan">npc-liliyan.png · 李严厉</option>
+        <option value="npc-shenzhiwei">npc-shenzhiwei.png · 沈知微</option>
+        <option value="npc-wenqixin">npc-wenqixin.png · 文启新</option>
+        <option value="npc-director">npc-director.png · 教导主任</option>
+        <option value="npc-dormkeeper">npc-dormkeeper.png · 宿管阿姨</option>
+        <option value="npc-qinxiangnuan">npc-qinxiangnuan.png · 秦向暖</option>
+        <option value="npc-canteen">npc-canteen.png · 食堂大叔</option>
+        <option value="npc-songtaotao">npc-songtaotao.png · 宋滔滔</option>
+        <option value="npc-zhengchongfeng">npc-zhengchongfeng.png · 郑冲锋</option>
+        <option value="npc-sumelody">npc-sumelody.png · 苏旋律</option>
+        <option value="npc-librarian">npc-librarian.png · 守书人</option>
+        <option value="npc-konghuaigu">npc-konghuaigu.png · 孔怀古</option>
+        <option value="enemy1">enemy1.png · 敌人 1</option>
+        <option value="enemy2">enemy2.png · 敌人 2</option>
+        <option value="enemy3">enemy3.png · 敌人 3</option>
+        <option value="boss">boss.png · Boss</option>
+      </select>
+    </label>
+    <label>去背景 <input id="key" type="checkbox" checked></label>
+    <label>容差 <input id="tol" type="range" min="10" max="120" value="52"></label>
+    <button id="export">导出 PNG</button>
+  </div>
+  <div class="stage">
+    <canvas id="view" width="900" height="520"></canvas>
+    <div class="hint" id="hint">先选择一张本地照片，然后在图上拖出一个框</div>
+  </div>
+  <div class="meta"><span>框选范围：<b id="rect">—</b></span><span>输出：160 × 240 透明 PNG，脚底居中</span></div>
+  <p class="privacy">隐私：照片通过 FileReader 在本地读取，只绘制在当前页面 canvas 中；不会上传、不会写入仓库。导出的 PNG 位于 <code>images/</code>，该目录已被 .gitignore 忽略。</p>
+</div>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const view = $('view'), ctx = view.getContext('2d');
+  let img = null, drag = null, rect = null, scale = 1, ox = 0, oy = 0;
+  const TOL = $('tol');
+
+  function reset() {
+    ctx.clearRect(0, 0, view.width, view.height);
+    ctx.fillStyle = 'rgba(3,10,15,.6)';
+    ctx.fillRect(0, 0, view.width, view.height);
+  }
+  function fit() {
+    reset();
+    if (!img) return;
+    scale = Math.min(view.width / img.width, view.height / img.height, 1);
+    const w = img.width * scale, h = img.height * scale;
+    ox = (view.width - w) / 2; oy = (view.height - h) / 2;
+    ctx.drawImage(img, ox, oy, w, h);
+    if (rect) drawRect();
+  }
+  function drawRect() {
+    if (!rect) return;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    ctx.fillRect(0, 0, view.width, view.height);
+    ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
+    if (img) {
+      const w = img.width * scale, h = img.height * scale;
+      ctx.save();
+      ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+      ctx.drawImage(img, ox, oy, w, h);
+      ctx.restore();
+    }
+    ctx.strokeStyle = '#8fe8ff'; ctx.lineWidth = 1.5;
+    ctx.strokeRect(rect.x + .5, rect.y + .5, rect.w, rect.h);
+    ctx.restore();
+    $('rect').textContent = `${Math.round(rect.x - ox)} , ${Math.round(rect.y - oy)} · ${Math.round(rect.w / scale)} × ${Math.round(rect.h / scale)}`;
+  }
+  function pos(e) {
+    const r = view.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * view.width / r.width, y: (e.clientY - r.top) * view.height / r.height };
+  }
+  view.addEventListener('pointerdown', e => {
+    if (!img) return;
+    const p = pos(e); drag = { x: p.x, y: p.y }; rect = { x: p.x, y: p.y, w: 0, h: 0 };
+    view.setPointerCapture(e.pointerId);
+  });
+  view.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const p = pos(e);
+    rect = { x: Math.min(drag.x, p.x), y: Math.min(drag.y, p.y), w: Math.abs(p.x - drag.x), h: Math.abs(p.y - drag.y) };
+    drawRect();
+  });
+  view.addEventListener('pointerup', e => {
+    if (!drag) return;
+    drag = null;
+    if (rect && (rect.w < 4 || rect.h < 4)) rect = null;
+    fit();
+  });
+  $('file').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const im = new Image();
+      im.onload = () => { img = im; rect = null; $('hint').style.display = 'none'; fit(); };
+      im.src = reader.result;
+    };
+    reader.readAsDataURL(f);
+  });
+  $('export').addEventListener('click', () => {
+    if (!img || !rect) { alert('先加载照片并框选一个人物。'); return; }
+    const sx = (rect.x - ox) / scale, sy = (rect.y - oy) / scale;
+    const sw = rect.w / scale, sh = rect.h / scale;
+    const out = document.createElement('canvas');
+    out.width = 160; out.height = 240;
+    const g = out.getContext('2d');
+    g.drawImage(img, sx, sy, sw, sh, 0, 0, 160, 240);
+    if ($('key').checked) {
+      const data = g.getImageData(0, 0, 160, 240), d = data.data;
+      const corners = [0, 159 * 4, 239 * 160 * 4, (160 * 240 - 1) * 4];
+      let br = 0, bg = 0, bb = 0;
+      for (const i of corners) { br += d[i]; bg += d[i + 1]; bb += d[i + 2]; }
+      br /= 4; bg /= 4; bb /= 4;
+      const tol = Number(TOL.value), t2 = tol * tol * 3;
+      for (let i = 0; i < d.length; i += 4) {
+        const dr = d[i] - br, dg = d[i + 1] - bg, db = d[i + 2] - bb;
+        if (dr * dr + dg * dg + db * db < t2) d[i + 3] = 0;
+      }
+      g.putImageData(data, 0, 0);
+    }
+    const name = $('target').value + '.png';
+    const a = document.createElement('a');
+    a.download = name;
+    a.href = out.toDataURL('image/png');
+    a.click();
+  });
+  reset();
+})();
+</script>
+</body>
+</html>
