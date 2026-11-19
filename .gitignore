@@ -17,3 +17,7 @@ Thumbs.db
 # 本地真人角色贴图（隐私）：只允许本地使用，禁止提交
 images/*
 !images/README.md
+!images/player.png
+!images/npc-*.png
+!images/enemy*.png
+!images/boss.png
