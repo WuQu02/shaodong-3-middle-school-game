@@ -216,6 +216,7 @@
   };
 
   T._makeNpc = function (it) {
+    it = it || {};
     const g = new THREE.Group();
     const data = (it.npc && it.npc.data) || {};
     const sid = data.id || '';
@@ -344,7 +345,7 @@
   T._makeInteractable = function (it) {
     const f = { rabbit: '_makeRabbit', cat: '_makeCat', lantern: '_makeLantern', koi: '_makeKoi', chime: '_makeChime', crane: '_makeCrane', incense: '_makeIncense', bell: '_makeBell', swordsman: '_makeSwordsman', sign: '_makeSign', schoolbell: '_makeSchoolBell', squirrel: '_makeSquirrel', npc: '_makeNpc', zone: '_makeZoneMarker', journal: '_makeNoticeBoard' }[it.kind];
     if (!f || !this[f]) return null;
-    const m = this[f]();
+    const m = this[f](it);
     m.model = it;
     m.baseX = it.x;
     this.actorGroup.add(m.group);
