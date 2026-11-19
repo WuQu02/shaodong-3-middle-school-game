@@ -1,0 +1,15 @@
+# 本地测试截图与临时文件
+_*.png
+*.log
+.DS_Store
+Thumbs.db
+
+# 任何真人照片、视频与私人素材均不应进入仓库
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.jpg
+*.jpeg
+*.wav
+*.mp3

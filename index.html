@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#070d14">
+  <meta name="description" content="《三中风云》——操控 DeepSeek 的 Q 萌形象（名字可自定义），执行名为“深寻”的任务，在三中梦境的风雪中迎战守心人刘奥。原创 3D 水墨武侠动作游戏，以邵东三中校园为虚构梦境背景。">
+  <meta property="og:title" content="三中风云｜刘奥 OUT">
+  <meta property="og:description" content="一场关于守护与放手的水墨武侠梦。浏览器即开即玩，约 40–60 分钟。">
+  <meta property="og:image" content="preview.png">
+  <meta property="og:type" content="website">
+  <title>三中风云｜刘奥 OUT</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/campus.css">
+</head>
+<body>
+  <canvas id="world3d" aria-hidden="true"></canvas>
+  <canvas id="game" aria-label="三中风云 游戏画面"></canvas>
+
+  <div id="ui">
+    <!-- 标题 -->
+    <section id="titleScreen" class="screen title-screen">
+      <div class="title-topline">
+        <span>DEEPSEEK FAN PROJECT</span>
+        <span class="vertical-rule"></span>
+        <span>邵东三中 · 3D 东方幻想</span>
+      </div>
+
+      <div class="title-lockup">
+        <p class="title-eyebrow">邵 东 三 中 · 风 雪 问 心</p>
+        <h1 class="game-title"><span>三中</span><i>风云</i></h1>
+        <div class="title-rule"><b></b><em>刘奥 OUT</em><b></b></div>
+        <p class="title-motto">雪落无声，问心有声。</p>
+      </div>
+
+      <nav class="main-menu" aria-label="主菜单">
+        <button class="menu-btn primary" data-action="new"><span class="btn-index">壹</span><span>入梦 · 开始</span><small>新的旅程</small></button>
+        <button class="menu-btn" data-action="continue" id="continueBtn" hidden><span class="btn-index">续</span><span>续梦 · 继续</span><small>承接上次心灯</small></button>
+        <button class="menu-btn" data-action="help"><span class="btn-index">式</span><span>招式 · 操作</span><small>查看键位</small></button>
+        <button class="menu-btn" data-action="settings"><span class="btn-index">律</span><span>音律 · 设置</span><small>音量与画面</small></button>
+        <button class="menu-btn" data-action="achievements"><span class="btn-index">录</span><span>心录 · 成就</span><small>彩蛋与足迹</small></button>
+      </nav>
+
+      <div class="title-side-note">
+        <span>一卷风雪</span>
+        <span>一柄问心</span>
+        <span>一场迟来的道别</span>
+      </div>
+
+      <div class="title-footer">
+        <p>非官方同人作品 · 以邵东三中为虚构背景，校园、人物与情节均为艺术化演绎，不代表真实学校与师生；未使用真实校徽、照片或录音。仅供娱乐，请勿模仿游戏中的危险动作。</p>
+        <span>建议佩戴耳机 · 键盘操作 · 1920×1080 最佳</span>
+      </div>
+      <div class="title-ink" aria-hidden="true"></div>
+    </section>
+
+    <!-- 顶部状态 -->
+    <div id="hud" class="hud hidden">
+      <div class="hud-left">
+        <div class="hud-portrait"><canvas id="hudPortrait" width="160" height="160"></canvas><i class="portrait-ring"></i></div>
+        <div class="hud-stats">
+          <div class="hud-name"><b id="hudName">深 寻</b><span>DEEPSEEK</span><em id="hudChapter">序章</em></div>
+          <div class="bar hp-bar"><i id="hpFill"></i><span id="hpText">160 / 160</span></div>
+          <div class="bar qi-bar"><i id="qiFill"></i><span>Token</span></div>
+          <div class="bar posture-bar"><i id="postureFill"></i><span>架势</span></div>
+          <div class="bar san-bar"><i id="sanFill"></i><span>理智 <b id="sanText">100 / 100</b></span></div>
+          <div class="xp-line"><div class="xp-track"><i id="xpFill"></i></div><span id="xpText">0 / 100</span><b>T · 属性</b></div>
+          <div class="hud-badges">
+            <span class="flask-badge" id="flaskBadge"><i>鲸露</i><b id="flaskCount">3</b></span>
+            <span class="focus-badge" id="focusBadge"><i>心念</i><b id="focusText">0%</b></span>
+            <span class="buff-badge" id="buffBadge" hidden>喵力</span>
+            <span class="level-badge">Lv.<b id="levelText">1</b></span>
+            <span class="attr-badge" id="attrBadge" hidden>属性点 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <div class="stage-label" id="stageLabel">第一章 · 雪落云门</div>
+        <div class="mission-label">三中 · 任务代号 深寻</div>
+        <div class="campus-hud">
+          <span class="disguise-chip" id="disguiseChip">伪装 <b id="disguiseText">100%</b></span>
+          <span class="date-chip" id="dateChip">2025-09-01 · 早自习</span>
+          <span class="exam-chip">高考倒计时 <b id="examDays">279</b> 天</span>
+        </div>
+        <div class="companion-chips" id="companionChips"></div>
+        <div class="vision-chip" id="visionChip">Tab · 算力之眼</div>
+        <div class="vision-chip zone-chip" id="zoneChip">M · 校园区域</div>
+        <div class="vision-chip journal-chip" id="journalChip">Q · 三中档案</div>
+        <div class="time-label"><span id="timerText">00:00</span><small>梦境时刻</small></div>
+        <div class="objective" id="objective">循着心念的裂痕前行</div>
+      </div>
+
+      <div id="comboDisplay" class="combo-display">
+        <strong id="comboNumber">0</strong><span>连斩</span>
+        <em id="comboRank">无痕</em>
+      </div>
+    </div>
+
+    <div id="bossBar" class="boss-bar hidden">
+      <div class="boss-meta"><span id="bossName">刘奥</span><em id="bossTitle">守心人</em><b id="bossPhase">一阶段</b></div>
+      <div class="boss-track"><i id="bossFill"></i><span class="boss-notch n1"></span><span class="boss-notch n2"></span></div>
+    </div>
+
+    <div id="interactPrompt" class="interact-prompt"><kbd>F</kbd><span id="interactName">互动</span><em>靠近·轻触</em></div>
+    <div id="toast" class="toast"></div>
+    <div id="omenToast" class="omen-toast">
+      <span>天 之 象</span>
+      <b id="omenName"></b>
+      <p id="omenSub"></p>
+    </div>
+    <div id="chapterCard" class="chapter-card">
+      <span id="chapterCardNum">第一章</span>
+      <h2 id="chapterCardName">雪落云门</h2>
+      <p id="chapterCardSub">云门旧地 · 风雪未停</p>
+    </div>
+    <div id="tutorial" class="tutorial"></div>
+    <div id="subtitleBark" class="bark"></div>
+
+    <div id="achievementToast" class="achievement-toast">
+      <div class="ach-mark" id="achToastSeal">鲸</div>
+      <div class="ach-copy"><span>心录 · 成就解锁</span><b id="achToastName"></b><p id="achToastDesc"></p></div>
+    </div>
+
+    <!-- 剧情对话 -->
+    <div id="dialogue" class="dialogue hidden">
+      <div class="dialogue-ornament"></div>
+      <div class="dialogue-portrait"><canvas id="dialoguePortrait" width="220" height="220"></canvas></div>
+      <div class="dialogue-body">
+        <div class="dialogue-name" id="dialogueName">DeepSeek</div>
+        <p class="dialogue-text" id="dialogueText"></p>
+        <div id="dialogueChoices" class="dialogue-choices hidden"></div>
+        <div class="dialogue-continue"><span>空格 / 点击</span><i></i></div>
+      </div>
+      <div class="dialogue-seal" aria-hidden="true">心</div>
+    </div>
+
+    <!-- 过场动画 -->
+    <div id="cinematic" class="cinematic hidden">
+      <div class="cinema-bar top"></div>
+      <div class="cinema-bar bottom"></div>
+      <div class="cinema-chapter" id="cinemaChapter">序 · 雪落无声</div>
+      <div class="cinema-portrait"><canvas id="cinemaPortrait" width="220" height="220"></canvas></div>
+      <button class="skip-btn" id="cinemaSkip">跳过序幕 <kbd>Esc</kbd></button>
+      <div class="cinema-caption">
+        <div class="cinema-speaker" id="cinemaSpeaker"></div>
+        <p id="cinemaText"></p>
+        <span class="cinema-hint" id="cinemaHint">点击 / 空格 继续</span>
+      </div>
+    </div>
+
+    <!-- 暂停 -->
+    <section id="pauseScreen" class="screen modal-screen hidden">
+      <div class="modal-panel pause-panel">
+        <p class="panel-eyebrow">风雪暂歇</p>
+        <h2>暂停</h2>
+        <div class="pause-actions">
+          <button class="ink-btn primary" data-action="resume">继续前行</button>
+          <button class="ink-btn" data-action="achievements">心录 · 成就</button>
+          <button class="ink-btn" data-action="help">查看招式</button>
+          <button class="ink-btn" data-action="photos">本地留影 · 照片角色</button>
+          <button class="ink-btn" data-action="settings">音律设置</button>
+          <button class="ink-btn danger" data-action="title">回到标题</button>
+        </div>
+        <p class="panel-note">进度会在每次破障后自动留存</p>
+      </div>
+    </section>
+
+    <!-- 本地照片角色 -->
+    <section id="photoScreen" class="screen modal-screen photo-screen hidden">
+      <div class="modal-panel photo-panel">
+        <p class="panel-eyebrow">本地 · 留影</p>
+        <h2>照片角色</h2>
+        <p class="photo-note">选择一张本地照片，游戏会在浏览器内完成去背景并生成 2.5D 纸片人。<b>照片不会上传、不会写入仓库或存档</b>，刷新页面后角色消失。</p>
+        <label class="photo-field"><span>照片文件</span><input id="photoFile" type="file" accept="image/*"></label>
+        <div class="photo-row">
+          <label class="photo-field"><span>角色名</span><input id="photoName" type="text" maxlength="12" placeholder="同学"></label>
+          <label class="photo-field"><span>行为</span>
+            <select id="photoFaction">
+              <option value="student">学生 · 附近游荡</option>
+              <option value="athlete">体育生 · 追击碰撞</option>
+              <option value="scholar">学霸 · 保持距离精神攻击</option>
+            </select>
+          </label>
+        </div>
+        <label class="photo-check"><input id="photoAI" type="checkbox" checked><span>启用 AI 行为（关闭后只作为立牌站立）</span></label>
+        <p class="photo-status" id="photoStatus">尚未导入照片。</p>
+        <div class="photo-actions">
+          <button class="ink-btn primary" data-action="importPhoto">导入到当前场景</button>
+          <button class="ink-btn" data-action="clearPhotos">清除留影</button>
+          <button class="ink-btn" data-action="closePhotos">返回暂停</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 操作说明 -->
+    <section id="helpScreen" class="screen modal-screen hidden">
+      <div class="modal-panel help-panel">
+        <p class="panel-eyebrow">问心式</p>
+        <h2>操作与招式</h2>
+        <div class="help-grid">
+          <div class="help-item"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>全向移动</span></div>
+          <div class="help-item"><kbd>Space</kbd><span>跳跃 / 二段跳</span></div>
+          <div class="help-item"><kbd>鼠标右键拖拽</kbd><span>环绕视角</span></div>
+          <div class="help-item"><kbd>J</kbd><span>三段连斩</span></div>
+          <div class="help-item"><kbd>K</kbd><span>潮涌斩 · 消耗 Token</span></div>
+          <div class="help-item"><kbd>Shift</kbd><span>闪身 · 无敌帧</span></div>
+          <div class="help-item"><kbd>E</kbd><span>卸势 · 红光时弹反</span></div>
+          <div class="help-item"><kbd>F</kbd><span>处决气竭敌人 / 互动</span></div>
+          <div class="help-item"><kbd>R</kbd><span>鲸露 · 回复生命</span></div>
+          <div class="help-item"><kbd>U</kbd><span>鲸落 · 心念满时释放</span></div>
+          <div class="help-item"><kbd>T</kbd><span>角色成长 · 属性与武学</span></div>
+          <div class="help-item"><kbd>B</kbd><span>行囊 · 装备 / 道具 / 合成</span></div>
+          <div class="help-item"><kbd>Tab</kbd><span>算力之眼 · 看见侵蚀与谣言</span></div>
+          <div class="help-item"><kbd>G</kbd><span>AI 娘伙伴 · 同行与净化</span></div>
+          <div class="help-item"><kbd>Q</kbd><span>三中档案 · 日历 / 班级 / 名册</span></div>
+          <div class="help-item"><kbd>M</kbd><span>校园区域 · 教学 / 宿舍 / 食堂 / 操场</span></div>
+          <div class="help-item"><kbd>Esc</kbd><span>暂停 / 跳过过场</span></div>
+        </div>
+        <div class="help-tip">
+          <b>完美闪身 · 卸势</b><span>在命中前一瞬按 <kbd>Shift</kbd> 触发 0.2 倍子弹时间；看到红光时按 <kbd>E</kbd> 削减敌人真气。<br>敌人真气归零后靠近按 <kbd>F</kbd> 处决。</span>
+        </div>
+        <button class="ink-btn primary wide" data-action="closeHelp">明白了</button>
+      </div>
+    </section>
+
+    <!-- 成长 -->
+    <section id="growthScreen" class="screen modal-screen growth-screen hidden">
+      <div class="growth-panel">
+        <div class="growth-head"><div><p class="panel-eyebrow">心念 · 成长</p><h2>角色成长</h2></div><div class="growth-points"><b id="growthPoints">0</b><span>可用属性点</span><em>技能点 <b id="growthSkillPoints">0</b></em></div></div>
+        <div class="growth-summary"><span>等级 <b id="growthLevel">1</b></span><span>经验 <b id="growthXp">0 / 100</b></span><span>累计击败 <b id="growthKills">0</b></span></div>
+        <div class="growth-tabs">
+          <button class="growth-tab active" data-action="growthTab" data-tab="attr">属 性</button>
+          <button class="growth-tab" data-action="growthTab" data-tab="skill">武 学</button>
+        </div>
+        <div id="growthAttrPanel" class="growth-attrs">
+          <div class="growth-attr" data-attr="str"><b>力 量</b><span id="attrStr">1</span><p>提高所有剑招伤害</p><button data-action="attrStr">＋</button></div>
+          <div class="growth-attr" data-attr="agi"><b>敏 捷</b><span id="attrAgi">1</span><p>提高移速与 Token 回复</p><button data-action="attrAgi">＋</button></div>
+          <div class="growth-attr" data-attr="vit"><b>体 魄</b><span id="attrVit">1</span><p>提高生命上限</p><button data-action="attrVit">＋</button></div>
+        </div>
+        <div id="growthSkillBranches" class="growth-skills hidden"></div>
+        <p class="growth-note">升级获得 3 点属性点与 1 点技能点。装备在行囊（B）中穿戴，词缀会实时计入同一份成长存档。</p>
+        <button class="ink-btn primary wide" data-action="closeGrowth">收心 · 继续</button>
+      </div>
+    </section>
+
+    <!-- 行囊 -->
+    <section id="equipmentScreen" class="screen modal-screen equipment-screen hidden">
+      <div class="growth-panel equipment-panel">
+        <div class="growth-head"><div><p class="panel-eyebrow">行囊 · 器物</p><h2>背包装备</h2></div><div class="growth-points"><b id="equipCount">0</b><span>行囊件数</span></div></div>
+        <div class="growth-tabs equip-tabs">
+          <button class="growth-tab active" data-action="equipTab" data-tab="equip">装 备</button>
+          <button class="growth-tab" data-action="equipTab" data-tab="items">道 具</button>
+          <button class="growth-tab" data-action="equipTab" data-tab="craft">合 成</button>
+        </div>
+        <div id="equipSlotsPanel">
+          <div class="equip-slots" id="equipSlots"></div>
+          <div class="equip-bag-head"><span>行 囊</span><em id="equipHint">点击器物穿戴；同槽位会自动替换</em></div>
+          <div id="equipBag" class="equip-bag"></div>
+        </div>
+        <div id="equipItemsPanel" class="hidden">
+          <div class="equip-bag-head"><span>道 具</span><em>白米饭、粉笔、耳机……在关键时候使用</em></div>
+          <div id="itemList" class="consumable-list"></div>
+        </div>
+        <div id="equipCraftPanel" class="hidden">
+          <div class="equip-bag-head"><span>合 成</span><em>在安全屋里，把校园物件拼成能活命的东西</em></div>
+          <div id="recipeList" class="recipe-list"></div>
+        </div>
+        <button class="ink-btn primary wide" data-action="closeEquipment">收好行囊</button>
+      </div>
+    </section>
+
+    <!-- 伙伴 -->
+    <section id="companionScreen" class="screen modal-screen companion-screen hidden">
+      <div class="growth-panel companion-panel">
+        <div class="growth-head"><div><p class="panel-eyebrow">心念 · 同行</p><h2>AI 娘伙伴</h2></div><div class="growth-points"><b id="companionActive">0</b><span>同行人数</span></div></div>
+        <div class="growth-summary"><span>按 <b>G</b> 开关本页</span><span>最多 <b>3</b> 位同行</span><span>精神攻击可能感染她们</span><span>白米饭 / 粉笔可净化</span></div>
+        <div id="companionList" class="companion-list"></div>
+        <p class="growth-note">好感度影响她们的台词与支援。被感染的 AI 娘会停止辅助并试图感染其他伙伴；放弃净化会留下隐患。</p>
+        <button class="ink-btn primary wide" data-action="closeCompanions">收束心念</button>
+      </div>
+    </section>
+
+    <!-- 档案 -->
+    <section id="journalScreen" class="screen modal-screen journal-screen hidden">
+      <div class="growth-panel journal-panel">
+        <div class="growth-head"><div><p class="panel-eyebrow">校园 · 档案</p><h2>三中档案</h2></div><div class="growth-points"><b id="journalExamDays">279</b><span>距高考 / 天</span></div></div>
+        <div class="growth-tabs">
+          <button class="growth-tab active" data-action="journalTab" data-tab="calendar">日 历</button>
+          <button class="growth-tab" data-action="journalTab" data-tab="classes">班 级</button>
+          <button class="growth-tab" data-action="journalTab" data-tab="roster">名 册</button>
+          <button class="growth-tab" data-action="journalTab" data-tab="rumors">传 言</button>
+          <button class="growth-tab" data-action="journalTab" data-tab="factions">派 系</button>
+        </div>
+        <div id="journalBody" class="journal-body"></div>
+        <p class="growth-note">2025 年 9 月 — 2026 年 6 月。世界不会等你，校园自有它的作息。</p>
+        <button class="ink-btn primary wide" data-action="closeJournal">合上档案</button>
+      </div>
+    </section>
+
+    <!-- 校园区域 -->
+    <section id="zoneScreen" class="screen modal-screen zone-screen hidden">
+      <div class="growth-panel zone-panel">
+        <div class="growth-head"><div><p class="panel-eyebrow">校园 · 行走</p><h2>三中校园</h2></div><div class="growth-points"><b id="zoneExamDays">279</b><span>距高考 / 天</span></div></div>
+        <div class="growth-summary"><span id="zoneClock">07:00 · 早自习</span><span id="zoneSan">理智 100 / 100</span><span>按 <b>M</b> 开关本页</span><span>行动会推进校园时间</span></div>
+        <div class="zone-layout">
+          <div class="zone-map" id="zoneMap"></div>
+          <div class="zone-detail" id="zoneDetail"></div>
+        </div>
+        <div class="zone-log" id="zoneLog"></div>
+        <p class="growth-note">区域行动受作息限制，也会消耗时间。上课时间在校园里动手仍会掉伪装；不同区域对应不同班级的污染。</p>
+        <button class="ink-btn primary wide" data-action="closeZones">走回走廊</button>
+      </div>
+    </section>
+
+    <!-- 成就 -->
+    <section id="achievementsScreen" class="screen modal-screen achievements-screen hidden">
+      <div class="achievements-panel">
+        <div class="achievements-head">
+          <div>
+            <p class="panel-eyebrow">心录 · 风雪留痕</p>
+            <h2>成就与彩蛋</h2>
+          </div>
+          <div class="ach-progress"><b id="achProgressText">0 / 16</b><span>已解锁</span></div>
+        </div>
+        <div id="achievementList" class="achievement-list"></div>
+        <p class="achievements-tip">有些名字、动作和藏在起点身后的东西，也会被心录记住。</p>
+        <button class="ink-btn primary wide" data-action="closeAchievements">合上心录</button>
+      </div>
+    </section>
+
+    <!-- 自定义名字 -->
+    <section id="nameScreen" class="screen modal-screen name-screen hidden">
+      <div class="modal-panel name-panel">
+        <p class="panel-eyebrow">入梦留名</p>
+        <h2>你叫什么名字？</h2>
+        <p class="name-desc">这个名字会写进这一卷风雪，也会留在自动存档里。</p>
+        <input id="playerNameInput" class="name-input" type="text" maxlength="10" placeholder="DeepSeek" autocomplete="off" spellcheck="false" aria-label="玩家名字">
+        <p class="name-hint">最多十字 · 留空则仍叫「DeepSeek」</p>
+        <div class="name-actions">
+          <button class="ink-btn primary" data-action="confirmName">写下名字 · 入梦</button>
+          <button class="ink-btn" data-action="cancelName">再想想</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 设置 -->
+    <section id="settingsScreen" class="screen modal-screen hidden">
+      <div class="modal-panel settings-panel">
+        <p class="panel-eyebrow">调律</p>
+        <h2>音律与画面</h2>
+        <label class="setting-row"><span>总音量</span><input id="volMaster" type="range" min="0" max="100" value="80"><b id="volMasterVal">80</b></label>
+        <label class="setting-row"><span>乐声</span><input id="volMusic" type="range" min="0" max="100" value="55"><b id="volMusicVal">55</b></label>
+        <label class="setting-row"><span>音效</span><input id="volSfx" type="range" min="0" max="100" value="75"><b id="volSfxVal">75</b></label>
+        <label class="setting-row"><span>角色语音</span><input id="volVoice" type="range" min="0" max="100" value="80"><b id="volVoiceVal">80</b></label>
+        <label class="setting-toggle"><span>屏幕震动</span><input id="toggleShake" type="checkbox" checked><b class="switch"></b></label>
+        <label class="setting-toggle"><span>减少动态效果</span><input id="toggleMotion" type="checkbox"><b class="switch"></b></label>
+        <button class="ink-btn primary wide" data-action="closeSettings">保存并返回</button>
+      </div>
+    </section>
+
+    <!-- 心诀选择 -->
+    <section id="upgradeScreen" class="screen modal-screen hidden">
+      <div class="upgrade-head">
+        <p class="panel-eyebrow">破障之后 · 心念凝形</p>
+        <h2>参悟一道心诀</h2>
+        <p>风雪会记住每一次选择。</p>
+      </div>
+      <div class="upgrade-cards" id="upgradeCards"></div>
+    </section>
+
+    <!-- 失败 -->
+    <section id="deathScreen" class="screen death-screen hidden">
+      <div class="death-ink"></div>
+      <div class="big-cai" id="bigCai">菜</div>
+      <div class="death-copy">
+        <p class="panel-eyebrow">心灯熄了</p>
+        <h2>这一局，有点菜。</h2>
+        <p>菜就多练。风会等，雪也会等。</p>
+        <div class="result-actions">
+          <button class="ink-btn primary" data-action="retry">重燃心灯</button>
+          <button class="ink-btn" data-action="title">回到标题</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 胜利 / 结局 -->
+    <div id="victoryStamp" class="victory-stamp hidden">
+      <div class="victory-rays"></div>
+      <div class="stamp-out">刘奥<b>OUT</b></div>
+      <p>守心人 · 败</p>
+    </div>
+
+    <section id="endingScreen" class="screen ending-screen hidden">
+      <div class="ending-panel">
+        <p class="panel-eyebrow">梦醒时分</p>
+        <h2>雪停了。</h2>
+        <p class="ending-quote">“爱若成牢，便不是归处。”</p>
+        <div class="ending-stats" id="endingStats"></div>
+        <div class="result-actions">
+          <button class="ink-btn primary" data-action="new">再入一梦</button>
+          <button class="ink-btn" data-action="title">回到标题</button>
+        </div>
+        <p class="ending-small">《三中风云》 · 本作仅供娱乐，危险动作请勿模仿。</p>
+      </div>
+    </section>
+
+    <!-- 触屏 -->
+    <div id="touchControls" class="touch-controls hidden">
+      <button class="t-pause" data-action="pause" aria-label="暂停">停</button>
+      <div class="touch-move">
+        <button data-touch="forward" aria-label="向前">▲</button>
+        <button data-touch="left" aria-label="向左">◀</button>
+        <button data-touch="back" aria-label="向后">▼</button>
+        <button data-touch="right" aria-label="向右">▶</button>
+      </div>
+      <div class="touch-action">
+        <button data-touch="jump" class="t-jump">跳</button>
+        <button data-touch="dodge" class="t-dodge">闪</button>
+        <button data-touch="attack" class="t-attack">斩</button>
+        <button data-touch="skill" class="t-skill">潮</button>
+        <button data-touch="heal" class="t-heal">露</button>
+        <button data-touch="deflect" class="t-deflect">卸</button>
+        <button data-touch="interact" class="t-interact">触</button>
+        <button data-touch="ultimate" class="t-ult">鲸</button>
+        <button data-touch="growth" class="t-growth">属</button>
+        <button data-touch="bag" class="t-bag">装</button>
+        <button data-touch="vision" class="t-vision">眼</button>
+        <button data-touch="companions" class="t-partner">伴</button>
+        <button data-touch="journal" class="t-journal">档</button>
+        <button data-touch="zones" class="t-zone">图</button>
+      </div>
+    </div>
+
+    <div id="rotateHint">请横屏游玩</div>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/three-bundle.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/threeworld.js"></script>
+  <script src="js/omens.js"></script>
+  <script src="js/interactables3d.js"></script>
+  <script src="js/animation.js"></script>
+  <script src="js/story.js"></script>
+  <script src="js/campus-data.js"></script>
+  <script src="js/campus-systems.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
