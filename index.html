@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <script>
+    // 默认进入开放世界沙盒；旧的动作模式保留在 index.html?story=1
+    (function () {
+      var q = location.search || '';
+      if (!/[?&]story=1/.test(q)) location.replace('sandbox.html' + q + (location.hash || ''));
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#070d14">

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>邵东三中 · 开放世界｜三中风云</title>
+<link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="css/sandbox.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="world" aria-label="邵东三中开放世界"></canvas>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+
+  <header id="hud" class="glass">
+    <canvas id="avatar" width="128" height="128"></canvas>
+    <div class="hud-main">
+      <div class="hud-title"><b>深寻</b><span>邵东三中 · 开放世界</span></div>
+      <div class="hud-clock"><span id="clockText">17:42</span><i>雪 · 冬</i></div>
+      <div class="bars">
+        <div class="bar"><label>体力</label><div class="track"><i id="staminaBar"></i></div></div>
+        <div class="bar mood"><label>心情</label><div class="track"><i id="moodBar"></i></div></div>
+      </div>
+    </div>
+    <div class="hud-actions">
+      <button id="btnAudio" class="round" title="声音">声</button>
+      <button id="btnMap" class="round" title="地图 M">图</button>
+      <button id="btnAch" class="round" title="成就 J">录</button>
+      <button id="btnRelic" class="round" title="神物 K">物</button>
+    </div>
+  </header>
+
+  <aside id="minimapWrap" class="glass">
+    <canvas id="minimap" width="440" height="96"></canvas>
+    <div id="zoneNow">校门 · 半月广场</div>
+  </aside>
+
+  <div id="zoneBanner"><span id="zoneBannerName"></span><em id="zoneBannerDesc"></em></div>
+  <div id="prompt" class="glass hidden"><kbd>E</kbd><span id="promptText">交谈</span></div>
+  <div id="toast"></div>
+  <div id="achToast" class="glass hidden"><i id="achSeal">行</i><div><b id="achName"></b><span id="achDesc"></span></div></div>
+
+  <div id="dialogue" class="glass hidden" role="dialog" aria-live="polite">
+    <canvas id="portrait" width="220" height="220"></canvas>
+    <div class="dlg-body">
+      <div class="dlg-head"><b id="dlgName"></b><span id="dlgRole"></span></div>
+      <p id="dlgText"></p>
+      <div id="dlgChoices" class="dlg-choices"></div>
+    </div>
+    <button id="dlgClose" class="dlg-close" aria-label="关闭">×</button>
+  </div>
+
+  <div id="welcome" class="glass">
+    <b>欢迎回到三中</b>
+    <p>今晚没有点名，也没有必须打的怪。你可以一直走。</p>
+    <div class="keys"><span><kbd>A</kbd><kbd>D</kbd> 移动</span><span><kbd>Shift</kbd> 跑</span><span><kbd>E</kbd> 交谈 / 拾取</span><span><kbd>M</kbd> 地图</span><span><kbd>J</kbd> 成就</span></div>
+    <button id="welcomeClose">开始闲逛</button>
+  </div>
+
+  <div id="riddle" class="glass hidden" role="dialog">
+    <p class="eyebrow">隐藏 · 神物</p>
+    <h2 id="riddleTitle">时之沙漏</h2>
+    <p id="riddleText"></p>
+    <label class="riddle-input"><input id="riddleInput" type="text" autocomplete="off" placeholder="写下答案"><button id="riddleSubmit">解开</button></label>
+    <p id="riddleHint" class="riddle-hint"></p>
+    <button id="riddleClose" class="link-btn">先不碰它</button>
+  </div>
+
+  <div id="panel" class="glass hidden">
+    <div class="panel-head"><div><p class="eyebrow" id="panelEyebrow">三中</p><h2 id="panelTitle">地图</h2></div><button id="panelClose" class="dlg-close">×</button></div>
+    <div id="panelBody"></div>
+  </div>
+
+  <div id="touch" class="hidden">
+    <div class="touch-move"><button data-move="left">◀</button><button data-move="right">▶</button></div>
+    <div class="touch-act"><button data-act="jump">跳</button><button data-act="interact">触</button></div>
+  </div>
+
+  <a id="storyLink" href="index.html?story=1">旧梦 · 动作模式</a>
+</div>
+<script src="js/sandbox-data.js"></script>
+<script src="js/sandbox.js"></script>
+</body>
+</html>
